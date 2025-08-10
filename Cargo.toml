@@ -1,0 +1,21 @@
+[package]
+name = "boiler-cli"
+version = "0.0.1"
+edition = "2024"
+
+[[bin]]
+name = "boiler"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+reqwest = { version = "0.12", features = ["blocking", "gzip", "json"] }
+flate2 = { version = "1.1", features = ["zlib"] }
+tar = "0.4"
+zip = "4.3"
+tempfile = "3"
+walkdir = "2"
+yini = "0.1.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing = "0.1"
