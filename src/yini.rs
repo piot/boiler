@@ -1,5 +1,6 @@
 use crate::github::GitHubShortName;
 use crate::{DepotId, SteamAppId};
+use seq_map::SeqMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -24,7 +25,7 @@ pub struct BinariesYini {
 pub struct ContentYini {
     pub depot: DepotId,
     pub repo: GitHubShortName,
-    pub directories: Vec<PathBuf>,
+    pub copy: Vec<(String, PathBuf)>,
 }
 
 #[derive(Debug)]
@@ -55,7 +56,7 @@ impl Default for BoilerYini {
                     org: "".to_string(),
                     name: "".to_string(),
                 },
-                directories: vec![],
+                copy: Vec::new(),
             },
         }
     }
@@ -126,11 +127,15 @@ pub fn parse_yini(yini_path: &Path) -> Option<BoilerYini> {
 
         let mut converted = Vec::new();
 
-        for dir_value in content_root.get("directories").unwrap().as_array().unwrap() {
-            converted.push(Path::new(dir_value.as_str().unwrap()).to_path_buf());
+        for v in content_root.get("copy").unwrap().as_array().unwrap() {
+            let (key, value) = v.as_tuple().unwrap();
+            converted.push((
+                key.as_str().unwrap().to_string(),
+                Path::new(&value.as_str().unwrap()).to_path_buf(),
+            ));
         }
 
-        ini.content.directories = converted;
+        ini.content.copy = converted;
     }
 
     Some(ini)

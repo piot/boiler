@@ -10,7 +10,7 @@ mod yini;
 
 use crate::args::parse;
 use crate::fetch::extract_to_target;
-use crate::fsutil::{copy_dir_recursive, copy_selected_dirs};
+use crate::fsutil::{CopyMapping, copy_dir_recursive, copy_mappings};
 use crate::git::shallow_clone_to;
 use crate::github::{github_download_url, github_repo_url};
 use crate::yini::parse_yini;
@@ -77,7 +77,16 @@ fn main() -> Result<()> {
 
     println!("🍬grabbing the goodies...");
     let shared_dest = args.build_dir.join("data");
-    copy_selected_dirs(&temp_shared_root, &shared_dest, &ini.content.directories)?;
+
+    let mut mappings = Vec::new();
+    for (source, target_sub_dir) in ini.content.copy {
+        mappings.push(CopyMapping {
+            from: source.parse()?,
+            to: target_sub_dir,
+        })
+    }
+
+    copy_mappings(&temp_shared_root, &args.build_dir, &mappings)?;
 
     println!("🛳️finding binaries to ship...");
     let prefix = github_download_url(ini.binaries.repo, &ini.binaries.version, &ini.binaries.name);
@@ -161,8 +170,15 @@ fn main() -> Result<()> {
 
     let borrow = app_build_vdf_file.canonicalize().unwrap();
     let complete_app_build_vdf_path = borrow.to_str().unwrap();
+
     println!(
-        "tip:\n🖥️ brew install steamcmd\n\nverify the build directory and then upload:\n\n🖥️ steamcmd +login [your_steam_email] +run_app_build {complete_app_build_vdf_path:?} +quit\n\n"
+        r#"tip:
+🖥️ brew install steamcmd # or install from https://developer.valvesoftware.com/wiki/SteamCMD
+
+verify the build/ directory and then upload using:
+
+🖥️ steamcmd +login [your_steam_email] +run_app_build {complete_app_build_vdf_path:?} +quit
+"#
     );
 
     Ok(())
