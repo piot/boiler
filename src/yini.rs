@@ -1,6 +1,5 @@
 use crate::github::GitHubShortName;
 use crate::{DepotId, SteamAppId};
-use seq_map::SeqMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;

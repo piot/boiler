@@ -76,7 +76,6 @@ fn main() -> Result<()> {
     shallow_clone_to(&repo, "main", &temp_shared_root)?;
 
     println!("🍬grabbing the goodies...");
-    let shared_dest = args.build_dir.join("data");
 
     let mut mappings = Vec::new();
     for (source, target_sub_dir) in ini.content.copy {

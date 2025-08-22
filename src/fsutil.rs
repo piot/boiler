@@ -9,30 +9,6 @@ fn norm_component(s: &str) -> &str {
     s.trim_matches('/').trim()
 }
 
-/// Copy only selected subfolders from `src_root` into `dest_root`.
-pub fn copy_selected_dirs(
-    src_root: &Path,
-    dest_root: &Path,
-    picks: &[PathBuf],
-) -> anyhow::Result<()> {
-    if picks.is_empty() {
-        return copy_dir_recursive(src_root, dest_root);
-    }
-    for pick in picks {
-        let pick_norm = norm_component(pick.to_str().unwrap());
-        if pick_norm.is_empty() {
-            continue;
-        }
-        let src_dir = src_root.join(pick_norm);
-        if !src_dir.exists() {
-            warn!(?pick_norm, ?src_root, "include root not found",);
-            continue;
-        }
-        copy_dir_recursive(&src_dir, &dest_root.join(pick_norm))?;
-    }
-    Ok(())
-}
-
 fn has_glob_meta(s: &str) -> bool {
     s.contains('*') || s.contains('?') || s.contains('[') || s.contains('{')
 }
