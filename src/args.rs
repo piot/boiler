@@ -22,6 +22,10 @@ pub struct Args {
     /// temporary files (default: ./temp)
     #[arg(long, default_value = "temp")]
     pub(crate) temp_dir: PathBuf,
+
+    /// Optional Steam setlive branch to set (omit to not set live)
+    #[arg(long = "live-branch", aliases = ["setlive"], value_name = "STEAM_BRANCH")]
+    pub(crate) live_branch: Option<String>,
 }
 
 pub fn parse() -> Args {

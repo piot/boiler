@@ -20,11 +20,11 @@ impl FromStr for GitHubShortName {
     }
 }
 
-pub fn github_repo_url(repo: GitHubShortName) -> String {
+pub fn github_repo_url(repo: &GitHubShortName) -> String {
     format!("https://github.com/{}/{}.git", repo.org, repo.name)
 }
 
-pub fn github_download_url(repo: GitHubShortName, version: &str, package_name: &str) -> String {
+pub fn github_download_url(repo: &GitHubShortName, version: &str, package_name: &str) -> String {
     format!(
         "https://github.com/{}/{}/releases/download/v{version}/{}",
         repo.org, repo.name, package_name

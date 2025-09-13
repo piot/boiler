@@ -15,6 +15,7 @@ use crate::git::shallow_clone_to;
 use crate::github::{github_download_url, github_repo_url};
 use crate::yini::parse_yini;
 use anyhow::{Context, Result, anyhow};
+use chrono::Utc;
 use std::fs;
 use tracing_subscriber::EnvFilter;
 
@@ -41,6 +42,17 @@ fn main() -> Result<()> {
             if !tok.trim().is_empty() {
                 args.github_token = Some(tok);
             }
+        }
+    }
+
+    // Refuse unsafe/public branches
+    if let Some(ref live_branch_value) = args.live_branch {
+        let branch_lower = live_branch_value.to_lowercase();
+        if branch_lower == "default" || branch_lower == "public" {
+            return Err(anyhow!(
+                "refusing to use forbidden Steam branch '{}' (use a non-public branch)",
+                live_branch_value
+            ));
         }
     }
 
@@ -72,8 +84,9 @@ fn main() -> Result<()> {
 
     // Start downloads and building
     println!("🦄fetching your lovely game content...");
-    let repo = github_repo_url(ini.content.repo);
-    shallow_clone_to(&repo, "main", &temp_shared_root)?;
+    let repo = github_repo_url(&ini.content.repo);
+    let (content_commit_hash, content_commit_time_iso) =
+        shallow_clone_to(&repo, "main", &temp_shared_root)?;
 
     println!("🍬grabbing the goodies...");
 
@@ -88,7 +101,11 @@ fn main() -> Result<()> {
     copy_mappings(&temp_shared_root, &args.build_dir, &mappings)?;
 
     println!("🛳️finding binaries to ship...");
-    let prefix = github_download_url(ini.binaries.repo, &ini.binaries.version, &ini.binaries.name);
+    let prefix = github_download_url(
+        &ini.binaries.repo,
+        &ini.binaries.version,
+        &ini.binaries.name,
+    );
 
     let mac_arm_url = format!("{prefix}-darwin-arm64.tar.gz");
     let macos_target = args.build_dir.join("binaries/macos");
@@ -128,7 +145,12 @@ fn main() -> Result<()> {
     ];
 
     let app_build_vdf_file = vdf_dir.join(format!("app_build_{}.vdf", ini.app_id));
-    let root_vdf_contents = vdf::app_build(ini.app_id, "Internal build", "internal", &depots);
+    let root_vdf_contents = vdf::app_build(
+        ini.app_id,
+        "Internal build",
+        args.live_branch.as_deref(),
+        &depots,
+    );
     println!("  ✅ {app_build_vdf_file:?}");
     fs::write(&app_build_vdf_file, root_vdf_contents)?;
 
@@ -169,6 +191,33 @@ fn main() -> Result<()> {
 
     let borrow = app_build_vdf_file.canonicalize().unwrap();
     let complete_app_build_vdf_path = borrow.to_str().unwrap();
+
+    let now_utc = Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+
+    // Content buildinfo in data/
+    println!("🏗writing buildinfo files...");
+    let content_buildinfo_path = args.build_dir.join("data").join("buildinfo_content.txt");
+    let content_buildinfo = format!(
+        "repo: {}/{}\ncommit: {}\ncommitted_at_utc: {}\nbuilt_at_utc: {}\n",
+        ini.content.repo.org,
+        ini.content.repo.name,
+        content_commit_hash,
+        content_commit_time_iso,
+        now_utc
+    );
+    fs::write(&content_buildinfo_path, content_buildinfo)?;
+
+    // Binaries buildinfo in each platform directory
+    let bin_buildinfo = format!(
+        "repo: {}/{}\nversion: {}\nbuilt_at_utc: {}\n",
+        ini.binaries.repo.org, ini.binaries.repo.name, ini.binaries.version, now_utc
+    );
+    fs::write(macos_target.join("buildinfo_binaries.txt"), &bin_buildinfo)?;
+    fs::write(
+        windows_target.join("buildinfo_binaries.txt"),
+        &bin_buildinfo,
+    )?;
+    fs::write(linux_target.join("buildinfo_binaries.txt"), &bin_buildinfo)?;
 
     println!(
         r#"tip:

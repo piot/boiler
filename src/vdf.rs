@@ -4,7 +4,7 @@ use std::path::Path;
 pub fn app_build(
     app_id: SteamAppId,
     description: &str,
-    live_branch: &str,
+    live_branch: Option<&str>,
     depots: &[Depot],
 ) -> String {
     let mut depots_string = String::new();
@@ -12,17 +12,23 @@ pub fn app_build(
         depots_string += &format!("            \"{}\" \"{}\"\n", depot.id, depot.vdf);
     }
 
+    let setlive_section = match live_branch {
+        Some(branch) => format!(
+            r#"    "setlive"  "{branch}"
+
+"#
+        ),
+        None => String::new(),
+    };
+
     let vdf = format!(
         r#""AppBuild"
 {{
     "appid"    "{app_id}"
     "desc"     "{description}"
-    "setlive"  "{live_branch}"
-
-    "depots"
+{setlive_section}    "depots"
     {{
-{depots_string}
-    }}
+{depots_string}    }}
 }}"#
     );
 
