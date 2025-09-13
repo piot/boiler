@@ -187,15 +187,13 @@ fn main() -> Result<()> {
     println!("  ✅ {windows_vdf_file:?}");
     fs::write(windows_vdf_file, windows_vdf)?;
 
-    println!("🎉 all steamed up!");
-
     let borrow = app_build_vdf_file.canonicalize().unwrap();
     let complete_app_build_vdf_path = borrow.to_str().unwrap();
 
     let now_utc = Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
 
     // Content buildinfo in data/
-    println!("🏗writing buildinfo files...");
+    println!("🏗 writing buildinfo files...");
     let content_buildinfo_path = args.build_dir.join("data").join("buildinfo_content.txt");
     let content_buildinfo = format!(
         "repo: {}/{}\ncommit: {}\ncommitted_at_utc: {}\nbuilt_at_utc: {}\n",
@@ -219,13 +217,21 @@ fn main() -> Result<()> {
     )?;
     fs::write(linux_target.join("buildinfo_binaries.txt"), &bin_buildinfo)?;
 
+    println!("🎉 all steamed up!");
+
     println!(
-        r#"tip:
-🖥️ brew install steamcmd # or install from https://developer.valvesoftware.com/wiki/SteamCMD
+        r#"
+tip:
 
-verify the build/ directory and then upload using:
+brew install steamcmd # or install from https://developer.valvesoftware.com/wiki/SteamCMD
 
-🖥️ steamcmd +login [your_steam_email] +run_app_build {complete_app_build_vdf_path:?} +quit
+verify the files in the build/ directory and then upload using:
+
+steamcmd +login [your_steam_email] +run_app_build {complete_app_build_vdf_path:?} +quit
+
+optionally set the branch to go live:
+
+steamcmd +login [your_steam_email] +run_app_build {complete_app_build_vdf_path:?} +setlive internal +quit
 "#
     );
 

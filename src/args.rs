@@ -4,7 +4,8 @@ use std::path::PathBuf;
 #[derive(Parser, Debug)]
 #[command(name = "boiler")]
 pub struct Args {
-    #[arg(long, default_value = "")]
+    /// Path to .boiler.yini configuration
+    #[arg(value_name = "INI")]
     pub(crate) ini: PathBuf,
 
     /// Optional GitHub token for private assets (env GITHUB_TOKEN also supported)
