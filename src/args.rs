@@ -1,4 +1,4 @@
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -27,8 +27,31 @@ pub struct Args {
     /// Optional Steam setlive branch to set (omit to not set live)
     #[arg(long = "live-branch", aliases = ["setlive"], value_name = "STEAM_BRANCH")]
     pub(crate) live_branch: Option<String>,
+
+    /// Leave build directory intact (do not delete at start)
+    #[arg(long)]
+    pub(crate) keep_build_dir: bool,
+
+    /// Which parts to process. Comma-separated: linux, mac, windows, content
+    /// Example: --targets mac,content
+    #[arg(long, value_delimiter = ',', value_enum)]
+    pub(crate) targets: Vec<Target>,
 }
 
 pub fn parse() -> Args {
     Args::parse()
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug, ValueEnum)]
+pub enum Target {
+    /// macOS binaries and depot (aliases: macos, osx)
+    #[value(alias = "macos")]
+    #[value(alias = "osx")]
+    Mac,
+    /// Linux binaries and depot
+    Linux,
+    /// Windows binaries and depot
+    Windows,
+    /// Game content (data/) and depot
+    Content,
 }

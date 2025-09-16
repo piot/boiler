@@ -140,3 +140,12 @@ pub fn copy_dir_recursive(src_dir: &Path, dest_dir: &Path) -> anyhow::Result<()>
     }
     Ok(())
 }
+
+/// Remove a directory if it exists, then recreate it (empty)
+pub fn clean_dir(dir: &Path) -> anyhow::Result<()> {
+    if dir.exists() {
+        fs::remove_dir_all(dir).with_context(|| format!("removing {}", dir.display()))?;
+    }
+    fs::create_dir_all(dir).with_context(|| format!("creating {}", dir.display()))?;
+    Ok(())
+}

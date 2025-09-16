@@ -36,11 +36,20 @@ Positional:
 - **--live-branch <STEAM_BRANCH>**: Optional Steam branch
   to set live during upload. Safety check refuses `default` and `public`.
 
+- **--keep-build-dir**: Do not delete `--build-dir` at startup. Still cleans `--temp-dir`.
+
+- **--targets <LIST>**: Comma-separated list of parts to process.
+  Accepted values: `content`, `mac` (aliases: `macos`, `osx`), `linux`, `windows`.
+  Default (when not provided): all of them.
+  - Examples:
+    - `--targets content` (only content)
+    - `--targets mac,windows` (macOS and Windows binaries)
+
 ### Important behavior
 
-- ⚠️ **Destructive clean:** At startup it deletes the entire `--build-dir`
+- ⚠️ **Destructive clean (default):** At startup it deletes the entire `--build-dir`
   and `--temp-dir` if they exist. Do not point these to directories with
-  anything you want to keep.
+  anything you want to keep. Use `--keep-build-dir` to preserve `--build-dir`.
 
 - Generated files include:
   - `app_build_<APP_ID>.vdf`
